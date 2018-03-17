@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "prozent.h"
+#include "percent_processor.h"
 
 /* wandelt einen hex wert in einen int wert */
 int hex_to_int(char c){
@@ -40,76 +40,76 @@ char * int_to_hex(int i){
 }
 
 /* wandelt alle prozentzeichen und deren zwei zeichen danach in lesbaren string */
-char * prozentdecode(const char *eingabe){
+char * percentdecode(const char *input){
 	int decode_size = 0;
-	const char *start = eingabe;
+	const char *start = input;
 		
 	/* decode_size ist neue groesse des rueckgabestrings */
-	while(*eingabe){
-		if(*eingabe == '%'){
-			eingabe += 2;
+	while(*input){
+		if(*input == '%'){
+			input += 2;
 		}
 		decode_size++;
-		eingabe++;
+		input++;
 	}
 		
 	/* mallocen des neuen rueckgabe-strings */
 	char *result = malloc(sizeof(char) * decode_size);
 		
-	eingabe = start;
+	input = start;
 	
 	/* umwandlung von prozent-zeichen und deren zwei nachkommenden zeichen */
-	while(*eingabe){
-		if(*eingabe == '%'){
+	while(*input){
+		if(*input == '%'){
 			/* umwandndlung einer hex zahl in einen char */
-			char c = hex_to_int(eingabe[1]) << 4 | hex_to_int(eingabe[2]);
+			char c = hex_to_int(input[1]) << 4 | hex_to_int(input[2]);
 			*result = c;
-			eingabe += 2;
+			input += 2;
 		}else{
-			*result = *eingabe;
+			*result = *input;
 		}
 		result++;
-		eingabe++;
+		input++;
 	}	
 	result -= decode_size;
 	return result;
 }
 
 /* wandelt einen string mit einem zucodieren teil in einen mit prozentzeichen und hexwert */
-char * prozentencode(const char *eingabe, const char * zucodieren){
+char * percentencode(const char *input, const char * encode_count){
 	int encode_size = 0;
-	int zucodieren_rewind = 0;
-	const char *start = eingabe;
+	int encode_count_rewind = 0;
+	const char *start = input;
 	int encoded = 0;
 	
 	/* zaehlt die neue groesse des strings */
-	while(*eingabe){
-		while(*zucodieren){
-			if(*eingabe == *zucodieren){
+	while(*input){
+		while(*encode_count){
+			if(*input == *encode_count){
 				encode_size += 2;
 			}
-			zucodieren++;
-			zucodieren_rewind++;
+			encode_count++;
+			encode_count_rewind++;
 		}
-		zucodieren -= zucodieren_rewind;
-		zucodieren_rewind = 0;
+		encode_count -= encode_count_rewind;
+		encode_count_rewind = 0;
 		encode_size++;
-		eingabe++;
+		input++;
 	}
 	
 	/* setzt den pointer zurueck */
-	eingabe = start;
+	input = start;
 	
 	char * result = malloc(sizeof(char) * encode_size);
 	
 	/* wandelt alle stellen an denen der zucodieren-string
 	 * uebereinstimmt in den entsprechenden hex wert mit
 	 * prozent-zeichen davor um */
-	while(*eingabe){
-		while(*zucodieren){
-			if(*eingabe == *zucodieren){
+	while(*input){
+		while(*encode_count){
+			if(*input == *encode_count){
 				
-				char *hex_string = int_to_hex(*eingabe);
+				char *hex_string = int_to_hex(*input);
 				
 				result[0] = '%';
 				result[1] = hex_string[0];
@@ -120,17 +120,17 @@ char * prozentencode(const char *eingabe, const char * zucodieren){
 				result += 2;
 				encoded = 1;
 			}
-			zucodieren++;
-			zucodieren_rewind++;
+			encode_count++;
+			encode_count_rewind++;
 		}
-		zucodieren -= zucodieren_rewind;
-		zucodieren_rewind = 0;
+		encode_count -= encode_count_rewind;
+		encode_count_rewind = 0;
 		
 		if(encoded == 0){
-			*result = *eingabe;
+			*result = *input;
 		}
 		result++;
-		eingabe++;
+		input++;
 		encoded = 0;
 	}
 	

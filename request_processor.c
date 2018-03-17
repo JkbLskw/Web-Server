@@ -5,17 +5,17 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <time.h>
-#include "prozent.h"
-#include "anfrage.h"
-#include "auftrag.h"
+#include "response.h"
+#include "splitter.h"
 
 #define REQUEST_BUFFER_SIZE 2048
 #define BUFFER_SIZE 200
 
 void process_request(int infd, int outfd, int logfd, char *serverpath){
 	
+    char *two_line_feed = "\r\n\r\n";
 	/* erstellt ein felder struct fuer die request-teile */
-	struct felder *parts = malloc(sizeof(struct felder));
+	struct fields *parts = malloc(sizeof(struct fields));
 	
 	/* definitionen der char-buffer */
 	char buffer[BUFFER_SIZE];
@@ -24,7 +24,7 @@ void process_request(int infd, int outfd, int logfd, char *serverpath){
 	char time_buffer[BUFFER_SIZE];
 	char first_line[BUFFER_SIZE];
 
-	/* fill the buffers with zeros */
+	/* fuellt die buffers mit nullen */
 	memset(buffer,0,BUFFER_SIZE);
 	memset(request_buffer,0,REQUEST_BUFFER_SIZE);
 	memset(log_buffer,0,BUFFER_SIZE);
@@ -48,7 +48,7 @@ void process_request(int infd, int outfd, int logfd, char *serverpath){
 		if(gelesen < 0){
 			perror("read request error");
 		}else{
-			/* appended den buffer des requests-lesens in den requestbuffer */
+          /* appended den buffer des requests-lesens in den requestbuffer */
 		  strncat(request_buffer, buffer, BUFFER_SIZE);
 		  /* wenn die zeile die erste ist */
 		  if(is_first == 1){
@@ -57,8 +57,8 @@ void process_request(int infd, int outfd, int logfd, char *serverpath){
 		    is_first = 0;
 		  }
 			
-		  /* bircht die while-schleife ab, wenn im request-buffer zwei linefeeds enthalten sind */
-		  if(strstr(request_buffer, "\r\n\r\n") != NULL){
+		  /* bricht die while-schleife ab, wenn im request-buffer zwei linefeeds enthalten sind */
+		  if(strstr(request_buffer, two_line_feed) != NULL){
 		    break;
 		  }
 		}
@@ -72,7 +72,7 @@ void process_request(int infd, int outfd, int logfd, char *serverpath){
 	*ptr_first_line = '\0';
 	
 	/* zerlegt die first_line in drei einzelne teile*/
-	auftragaufdroeseln(first_line, parts);
+	split_request(first_line, parts);
 	
 	/* get time in time_buffer*/
 	strftime(time_buffer, BUFFER_SIZE, "%d.%m.%Y %T", current_time);
@@ -81,6 +81,7 @@ void process_request(int infd, int outfd, int logfd, char *serverpath){
 	/* log request */
 	write(logfd, log_buffer, BUFFER_SIZE);
 	write(0, log_buffer, BUFFER_SIZE);
+    
 	/* write response */
 	do_get(parts->id, serverpath, outfd);
 

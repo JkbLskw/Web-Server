@@ -3,5 +3,5 @@ CFLAGS=-g -ansi -Wall
 
 all: webserver
 
-webserver: webserver.c prozent.c auftrag.c anfrage.c request.c
-	$(CC) $(CFLAGS) webserver.c prozent.c auftrag.c anfrage.c request.c -o webserver
+webserver: webserver.c percent_processor.c splitter.c response.c request_processor.c
+	$(CC) $(CFLAGS) webserver.c percent_processor.c splitter.c response.c request_processor.c -o webserver

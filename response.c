@@ -6,7 +6,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <dirent.h>
-
+#include "response.h"
 
 /* definitionen der html tags */
 char html_start_tag[6] = "<html>";
@@ -168,7 +168,7 @@ void do_get(char *respath, const char *server_path, int outfd){
 	char *status[2] = {"200 OK","404 Not Found"};
     
     /* definition des not-found-html */
-	char html_not_found[36] = "<html><h1>404 Not Found</h1></html>\n";
+	char html_not_found[27] = "<html>404 Not Found</html>\n";
     
     /* char-arrays zum halten der header-strings */
 	char content_size[30];

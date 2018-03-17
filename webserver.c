@@ -13,7 +13,7 @@
 #include <sys/types.h>
 #include <signal.h>
 #include <sys/wait.h>
-#include "request.h"
+#include "request_processor.h"
 
 
 #define BUFFER_LEN 20
@@ -52,7 +52,9 @@ void sub(int serversockfd, int newsockfd, int logfd){
 
 /* tcp server */
 void do_serv(int port, int logfd){
-        char log_buffer[100];
+    char *log_buffer;
+    int log_spacing_size = 3;
+    int log_semaphore = 0;
 	int sockfd = 0;
 	int newsockfd = 0;
 	socklen_t clientlen;
@@ -80,22 +82,26 @@ void do_serv(int port, int logfd){
 		exit(-1);
 	}
 
-	write(0, "started\n", 8);
+	write(0, "webserver started\n", 18);
 	
     /* endlos-schleife zum akzeptieren von eingehenden verbindungen*/
 	for(;;){
         /* laenge des address-structs*/
 		clientlen = sizeof(struct sockaddr);
-        
+        log_semaphore = 1;
         /* neuer client socket wird erzeugt, wenn eine anfrage reinkommt*/
 		newsockfd = accept(sockfd, (struct sockaddr*)&clientaddr, &clientlen);
-		if(newsockfd > 0){
-		  /* loggt die ip der eingehenden Anfrage */
-		  sprintf(log_buffer, "%s - ", inet_ntoa(clientaddr.sin_addr));
-		  write(logfd, log_buffer, strlen(log_buffer));	
-		  write(0, log_buffer, strlen(log_buffer));
-		  /* gibt die file-descriptoren an den sohn-prozess weiter*/
-		  sub(sockfd, newsockfd, logfd);
+		if(newsockfd > 0 && log_semaphore == 1){
+            log_semaphore = 0;
+            /* init log_buffer */
+            log_buffer = calloc(strlen(inet_ntoa(clientaddr.sin_addr)) + log_spacing_size, sizeof(char));
+            /* loggt die ip der eingehenden Anfrage */
+            sprintf(log_buffer, "%s - ", inet_ntoa(clientaddr.sin_addr));
+            write(logfd, log_buffer, strlen(log_buffer));	
+            write(0, log_buffer, strlen(log_buffer));
+            free(log_buffer);
+            /* gibt die file-descriptoren an den sohn-prozess weiter*/
+            sub(sockfd, newsockfd, logfd);
 		}
 		
 	}
@@ -104,7 +110,7 @@ void do_serv(int port, int logfd){
 }
 
 int main(int argc, char *argv[]){
-        /* standard-port */
+    /* standard-port */
 	int port = 8080;
 	
 	if(argc == 1){
@@ -164,7 +170,7 @@ int main(int argc, char *argv[]){
 	}
 
 	/* erzeugt den log-file-descriptor */
-	int logfd = open(LOGFILE, O_CREAT|O_TRUNC|O_WRONLY, 0644);
+	int logfd = open(LOGFILE, O_CREAT|O_APPEND, 0644);
 	if(logfd < 0){
 		perror("can't open server.log");
 		exit(-1);
