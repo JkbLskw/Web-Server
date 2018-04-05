@@ -54,7 +54,6 @@ void sub(int serversockfd, int newsockfd, int logfd){
 void do_serv(int port, int logfd){
     char *log_buffer;
     int log_spacing_size = 3;
-    int log_semaphore = 0;
 	int sockfd = 0;
 	int newsockfd = 0;
 	socklen_t clientlen;
@@ -88,11 +87,9 @@ void do_serv(int port, int logfd){
 	for(;;){
         /* laenge des address-structs*/
 		clientlen = sizeof(struct sockaddr);
-        log_semaphore = 1;
         /* neuer client socket wird erzeugt, wenn eine anfrage reinkommt*/
 		newsockfd = accept(sockfd, (struct sockaddr*)&clientaddr, &clientlen);
-		if(newsockfd > 0 && log_semaphore == 1){
-            log_semaphore = 0;
+		if(newsockfd > 0){
             /* init log_buffer */
             log_buffer = calloc(strlen(inet_ntoa(clientaddr.sin_addr)) + log_spacing_size, sizeof(char));
             /* loggt die ip der eingehenden Anfrage */
